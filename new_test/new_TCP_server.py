@@ -5,8 +5,8 @@ import string
 import socket
 import sys
 
-SERVER_IP = '192.168.0.28'
-PORT = 12401
+SERVER_IP = '192.168.0.199'
+PORT = 12403
 rtt_count = 0  # Initialize counter to track RTT count
 LENGHT = 23556
 class MyHandler(http.server.BaseHTTPRequestHandler):
