@@ -1,32 +1,54 @@
 import socket
+import time
+import csv
 
-# 서버의 호스트 이름과 포트 번호를 정의합니다.
-SERVER_IP = '166.104.246.42'
-PORT = 12400
+SERVER_IP = '127.0.0.1'  # 서버의 실제 IP 주소로 변경해야 합니다.
+SERVER_PORT = 8000
+
+def send_udp_data(sock, server_address, size):
+    data = b'x' * size
+    start_time = time.time()
+    sock.sendto(data, server_address)
+    print("odododo")
+    sock.settimeout(2.0)  # 2초 동안 응답을 기다립니다.
+    try:
+        received, _ = sock.recvfrom(4096)
+        end_time = time.time()
+        return end_time - start_time
+    except socket.timeout:
+        print("Response timed out")
+        return None
 
 def main():
-    # UDP 소켓 객체를 생성합니다.
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client_socket:
-        try:
-            # 사용자로부터 데이터 길이를 입력받습니다.
-            message_length = int(input("요청할 데이터의 길이를 입력하세요: "))
-            
-            # 서버에 전송할 메시지를 준비합니다. (여기서는 길이 정보를 문자열로 전송)
-            message = str(message_length).encode('utf-8')
-            
-            # 메시지를 서버로 전송합니다.
-            client_socket.sendto(message, (SERVER_IP, PORT))
-            
-            # 서버로부터 응답을 받습니다.
-            data, _ = client_socket.recvfrom(1472)  # 버퍼 크기를 1472로 설정
-            
-            # 받은 데이터를 출력합니다.
-            print(f"서버로부터 받은 데이터: {data.decode('utf-8')}")
-        except ValueError:
-            print("유효한 숫자를 입력해야 합니다.")
-        except Exception as e:
-            print(f"에러 발생: {e}")
+    window_sizes_kb = [4, 16, 64, 128, 1024]
+    iterations = 30
+    results = {size: [] for size in window_sizes_kb}
+    server_address = (SERVER_IP, SERVER_PORT)
+
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        for size in window_sizes_kb:
+            print(f"Testing with window size: {size}K")
+            for _ in range(iterations):
+                elapsed_time = send_udp_data(sock, server_address, size * 1024)
+                if elapsed_time is not None:
+                    results[size].append(elapsed_time)
+                    print(f"Elapsed time: {elapsed_time:.5f} seconds")
+                    time.sleep(2)
+                else:
+                    print("Test failed due to timeout.")
+   
+    # 결과 정렬 및 저장
+    for size in window_sizes_kb:
+        results[size].sort()
+
+    with open('udp_test_results.csv', 'w', newline='') as csvfile:
+        fieldnames = [f"{size}K" for size in window_sizes_kb]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for i in range(iterations):
+            row = {f"{size}K": results[size][i] if i < len(results[size]) else "" for size in window_sizes_kb}
+            writer.writerow(row)
 
 if __name__ == "__main__":
     main()
-
