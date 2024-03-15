@@ -2,17 +2,18 @@ import socket
 import time
 import csv
 
-SERVER_IP = '127.0.0.1'  # 서버의 실제 IP 주소로 변경해야 합니다.
+SERVER_IP = '127.0.0.1'  # 서버의 실제 IP 주소로 변경해야 함
 SERVER_PORT = 8000
+certsize = 5454
 
-def send_udp_data(sock, server_address, size):
-    data = b'x' * size
+def send_udp_data(sock, server_address, size, certsize):
+    request_data_size = str(certsize).encode()
     start_time = time.time()
-    sock.sendto(data, server_address)
-    print("odododo")
-    sock.settimeout(2.0)  # 2초 동안 응답을 기다립니다.
+    sock.sendto(request_data_size, server_address)
+    
+    sock.settimeout(2.0)  # 2초 동안 응답을 기다림
     try:
-        received, _ = sock.recvfrom(4096)
+        received, _ = sock.recvfrom(size)
         end_time = time.time()
         return end_time - start_time
     except socket.timeout:
@@ -27,20 +28,17 @@ def main():
 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         for size in window_sizes_kb:
-            print(f"Testing with window size: {size}K")
+            print(f"Testing with request size: {size}K")
             for _ in range(iterations):
-                elapsed_time = send_udp_data(sock, server_address, size * 1024)
+                elapsed_time = send_udp_data(sock, server_address, size * 1024, certsize)
                 if elapsed_time is not None:
                     results[size].append(elapsed_time)
                     print(f"Elapsed time: {elapsed_time:.5f} seconds")
-                    time.sleep(2)
+                    time.sleep(1)  # 각 테스트 사이에 짧은 휴식
                 else:
                     print("Test failed due to timeout.")
-   
-    # 결과 정렬 및 저장
-    for size in window_sizes_kb:
-        results[size].sort()
 
+    # 결과 정렬 및 저장
     with open('udp_test_results.csv', 'w', newline='') as csvfile:
         fieldnames = [f"{size}K" for size in window_sizes_kb]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
