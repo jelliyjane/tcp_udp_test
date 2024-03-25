@@ -4,8 +4,8 @@ import random
 
 
 def server():
-    SERVER_IP = '172.31.21.125'  # 실제 서버 IP로 변경해야 함
-    SERVER_PORT = 12460
+    SERVER_IP = '172.31.32.246'  # 실제 서버 IP로 변경해야 함
+    SERVER_PORT = 12452
 
     server_address = (SERVER_IP, SERVER_PORT)
 

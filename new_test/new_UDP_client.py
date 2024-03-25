@@ -2,9 +2,9 @@ import socket
 import time
 import csv
 
-SERVER_IP = '127.0.0.1'  # 서버의 실제 IP 주소로 변경해야 함
-SERVER_PORT = 8000
-certsize = 5454
+SERVER_IP = '166.104.246.42'  # 서버의 실제 IP 주소로 변경해야 함
+SERVER_PORT = 12452
+certsize = 48731
 
 def send_udp_data(sock, server_address, size, certsize):
     request_data_size = str(certsize).encode()
@@ -21,7 +21,7 @@ def send_udp_data(sock, server_address, size, certsize):
         return None
 
 def main():
-    window_sizes_kb = [4, 16, 64, 128, 1024]
+    window_sizes_kb = [128]
     iterations = 30
     results = {size: [] for size in window_sizes_kb}
     server_address = (SERVER_IP, SERVER_PORT)
